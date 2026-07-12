@@ -1,0 +1,17 @@
+{
+  "name": "security-review-skill",
+  "version": "1.0.0",
+  "description": "Framework-agnostic security review skill for Claude Code. Detects project tech stack, then runs universal and stack-specific security checks with severity-tagged findings.",
+  "keywords": [
+    "claude-code",
+    "security",
+    "security-review",
+    "skills",
+    "agent-skills",
+    "vulnerability-audit"
+  ],
+  "license": "MIT",
+  "files": [
+    "skills"
+  ]
+}
