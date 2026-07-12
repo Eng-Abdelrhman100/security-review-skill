@@ -1,3 +1,8 @@
+---
+name: security-review
+description: Framework-agnostic security audit skill. Detects the project's tech stack, then runs universal and stack-specific security checks aligned with OWASP Top 10:2025, OWASP API Security Top 10:2023, OWASP LLM Top 10:2025, OWASP Mobile Top 10:2024, and CWE Top 25:2025. Use when reviewing code for vulnerabilities, running a security audit, pen testing, checking authentication/authorization/injection/file-upload/OAuth flows, or before a production deploy or client handoff.
+---
+
 # /security-review
 
 A structured, framework-agnostic security audit skill. Detects the project's tech stack first, then runs a fixed set of universal security checks plus stack-specific checks relevant to what was detected. Output format mirrors `/review` — severity-tagged findings, no automatic fixes unless explicitly requested.
