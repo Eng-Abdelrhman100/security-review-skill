@@ -39,8 +39,9 @@ Before checking anything, identify what's actually in the project. Look for, in 
 - Mobile stack present (`android/` + `ios/` dirs, `pubspec.yaml` for Flutter, `.xcodeproj`/`Podfile` for native iOS, `build.gradle` for native Android, React Native's `metro.config.js`, Xamarin/MAUI `.csproj`, or Cordova/Ionic `config.xml`) → also run the Mobile-specific checks in Step 2.
 - Infrastructure-as-code present (`Dockerfile`, `*.tf`, `k8s/*.yaml`, `docker-compose.yml`) → also run the Infrastructure & Deployment category below.
 - Multiple of the above → treat as a multi-stack project (e.g. Laravel backend + separate JS frontend + LLM feature) and run checks against each part separately, scoped to the relevant directory.
+- **Multiple genuinely separate sub-projects** (not just multiple stacks within one app, but distinct deployable applications living in the same repository — e.g. a main app plus a separate LMS/admin/microservice sub-app each with their own `composer.json`/`package.json`, routes, and entry point) require independent, explicit coverage per sub-project. A single "Checked ✅" per category is not sufficient when two sub-projects exist — see the Coverage Checklist requirement below, which must confirm each sub-project was actually walked, not just the app as a whole.
 
-State the detected stack explicitly at the start of the review output. If detection is ambiguous, ask rather than guessing.
+State the detected stack explicitly at the start of the review output. If detection is ambiguous, ask rather than guessing. If multiple sub-projects are detected, list each one by name/path explicitly in the "Detected stack" line of the output.
 
 ### Parallelization for full-project scans
 
@@ -258,6 +259,10 @@ Category                                  | Checked | Findings
 ```
 
 `⬜` (unchecked) is not an allowed final state — every row must resolve to `✅` (checked, findings counted, possibly zero) or `N/A` (category doesn't apply to this project type, e.g. Infrastructure & Deployment with no IaC present, or Mobile with no mobile stack detected). If a row is still `⬜` when the review is otherwise "done," go back and actually check it before presenting the report — do not mark something `N/A` simply to close it out faster.
+
+**If Step 0 detected multiple genuinely separate sub-projects** (distinct deployable apps in one repo, not just multiple stacks in one app), the Coverage Checklist must additionally confirm per-sub-project coverage, not just per-category. Either:
+- Produce one Coverage Checklist table per sub-project, or
+- Add a sub-project confirmation column/note to each row (e.g. "✅ (both mrreda/ and darsonline/ walked)" rather than a bare "✅") — a finding that exists only in one sub-project must not create false confidence that the sibling sub-project received equivalent scrutiny for that category.
 
 ## Output format
 
