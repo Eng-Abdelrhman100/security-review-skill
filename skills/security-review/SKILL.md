@@ -42,6 +42,17 @@ Before checking anything, identify what's actually in the project. Look for, in 
 
 State the detected stack explicitly at the start of the review output. If detection is ambiguous, ask rather than guessing.
 
+### Parallelization for full-project scans
+
+On a full-project baseline scan (not a small diff-scoped review), decompose the 13 universal categories plus applicable stack-specific sections into 3-4 logical groups and investigate them concurrently via sub-agents/parallel tool calls, if the runtime supports it:
+
+- **Group A — Access, Auth, Business Logic**: Categories 1, 6 (rate-limiting portion), 7, 12
+- **Group B — Injection, XSS, File Handling**: Category 5, 11, plus any stack-specific injection/upload checks
+- **Group C — Config, Crypto, Supply Chain, Integrity, Logging, Exceptions**: Categories 2, 3, 4, 8, 9, 10, 13
+- **Group D (if applicable)** — any large stack-specific section (API, LLM, Mobile) that's substantial enough to warrant its own pass
+
+Each group should be given the same file:line citation, severity, and "CLEAN because I checked X" requirements as a single-pass review. This scales investigation depth on large codebases without any one pass running out of context, and was validated as effective on a real ~25-controller Laravel project. For a small diff-scoped review (a handful of changed files), a single sequential pass is simpler and sufficient — don't parallelize trivially small reviews.
+
 ## Step 1 — Universal checks (run on every project, regardless of stack)
 
 Categories 1–10 map directly to OWASP Top 10:2025 (A01–A10). Categories 11–13 are additional checks not covered by that list but still relevant to a full review, sourced from CWE Top 25 real-world data and standard manual-pentest practice.
@@ -276,6 +287,7 @@ Severity definitions:
 - **Critical** — actively exploitable, would cause real harm if shipped (data breach, auth bypass, RCE, payment manipulation)
 - **Important** — a real weakness that should be fixed before production, not immediately exploitable but a clear risk
 - **Minor** — best-practice gap, low real-world risk, worth fixing but not blocking
+- **Info** — worth noting for the reader's awareness, but carries no actual risk on its own (e.g. "no CORS config exists, confirm this is intentional for a same-origin app" — not a misconfiguration, just something to consciously confirm). Use sparingly — most findings should resolve to one of the three risk tiers above, not Info as a way to avoid committing to a severity.
 
 Severity is contextual to exposure, not just the abstract vulnerability class. The same vulnerability class can warrant different severities depending on who can reach it:
 - A finding reachable by any unauthenticated internet user is generally more severe than the identical code pattern reachable only by an already-authenticated internal admin, which is in turn more severe than one reachable only by a superuser/developer with direct server access.
@@ -288,6 +300,7 @@ Where possible, cite the exact file and line, and show the vulnerable snippet al
 
 - Always run Step 0 first and state the detected stack explicitly before any findings
 - Never skip a universal category because "this feature doesn't touch that" — state explicitly why a category is N/A rather than omitting it
+- **Every category or subcategory marked clean must state what was actually checked, not just "clean" alone.** The required phrasing is "CLEAN — [what was checked, e.g. grepped X pattern across Y directory, N hits, all confirmed safe because Z]" or "PASS — [same structure]." A bare "Clean." or "No issues." with no stated method is not acceptable output — the reader needs to know what was actually investigated to trust the finding, not just take the verdict on faith.
 - Only apply stack-specific checks for stacks actually detected in the project — don't run Laravel checks against a Node project, don't run AI/LLM checks against a project with no LLM feature, don't run mobile checks against a pure web backend
 - Always check actual code, never assume based on variable/method/file naming alone
 - Grep-based checks are a starting point, not a substitute for reading the actual logic — a grep hit is a lead to investigate, not itself a finding
