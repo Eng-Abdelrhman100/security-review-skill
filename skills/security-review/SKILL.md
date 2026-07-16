@@ -1,6 +1,7 @@
 ---
 name: security-review
 description: Framework-agnostic security audit skill. Detects the project's tech stack, then runs universal and stack-specific security checks aligned with OWASP Top 10:2025, OWASP API Security Top 10:2023, OWASP LLM Top 10:2025, OWASP Mobile Top 10:2024, and CWE Top 25:2025. Use when reviewing code for vulnerabilities, running a security audit, pen testing, checking authentication/authorization/injection/file-upload/OAuth flows, or before a production deploy or client handoff.
+when_to_use: After any feature involving auth, payments, file uploads, OAuth, or user input; before any production deploy or client handoff; on explicit trigger phrases like "security-review this", "run a security review", "audit this for vulnerabilities", "pen test this"; at least once as a full-project baseline on a new or existing codebase, then re-run scoped to the diff after major auth/integration features.
 ---
 
 # /security-review
@@ -22,6 +23,10 @@ Aligned with five current, independently-sourced standards — not an invented c
 - Should run at least once before go-live, and again after any major auth/integration feature
 - Works on any project — Laravel, Node/Express, Django, Rails, plain PHP, React/Next.js frontends, Rust/Go/C++ backends, AI/LLM-powered features, etc.
 - Diff-aware: when reviewing a specific PR/branch/recent change set, scope the review to changed files first, then note if any change touches a security-sensitive area (auth, secrets, file I/O, external calls, LLM prompts) that warrants a wider check of the surrounding code.
+
+### Expected depth and cost
+
+This skill is intentionally read-heavy, not grep-only. A grep hit is a lead to investigate, never itself a finding (see Rules below) — every category requires actually opening and reading the relevant files, tracing a request through middleware/policy/controller, and reasoning about real reachability before a finding is reported. This is deliberate: two independent real-world runs of this skill found genuinely serious, non-obvious issues (an unthrottled admin login with no attempt logging; a hardcoded admin backdoor route with a password visible in the HTTP response) that a shallow, pattern-matching-only pass would have missed entirely. Expect a full-project baseline scan to consume meaningfully more tool calls and tokens than a typical feature build or `/review` pass — that cost is the mechanism by which this skill finds real vulnerabilities, not overhead to be trimmed. Do not shorten investigation depth to save tokens; if budget is genuinely constrained, reduce scope (diff-scoped instead of full-project) rather than reducing thoroughness within whatever scope is chosen.
 
 ## Step 0 — Detect the stack
 
