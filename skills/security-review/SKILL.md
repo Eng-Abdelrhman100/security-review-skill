@@ -83,7 +83,10 @@ Categories 1–10 map directly to OWASP Top 10:2025 (A01–A10). Categories 11�
 ### 2. Security Misconfiguration (OWASP A02:2025)
 - Debug/development mode confirmed OFF in production config
 - Security headers present where applicable (CSP, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, Referrer-Policy) — flag absence as Minor/Important depending on the app's exposure
-- Default/example credentials (seeders, `.env.example`, fixture data) never match real production values
+- Default/example credentials (seeders, `.env.example`, fixture data) never match real production values, and no real secret is hardcoded or committed anywhere. A clean current-tree grep is not sufficient on its own — a secret removed from the working tree still lives in git history unless the history was rewritten. `.env.example` files and config templates are a common real-world leak vector: a real credential gets pasted in "just for now" while testing, then committed, then later replaced with a placeholder — but the original commit still contains the live value. Explicitly check:
+  - (a) Run a history-aware scan — `git log -p --all` grepped for the same leak patterns, or a dedicated tool (`gitleaks`, `trufflehog`) against the full history, not just HEAD. A current-tree-only check gives false confidence.
+  - (b) Confirm `.env` and other real credential files are actually untracked — `git ls-files | grep '\.env'` should return nothing beyond `.env.example`/`.env.sample`. A `.gitignore` entry added after a file was already committed does not retroactively untrack it.
+  - (c) If a real secret is found anywhere in history, the finding is not "add this to .gitignore" — it is "this credential is already compromised, rotate it immediately regardless of whether the repository is public," since git history persists independently of current branch protection or visibility settings.
 - Insecure defaults not left unchanged (default admin passwords, open storage buckets, permissive database bind addresses, unused services/ports left enabled)
 - Error messages return generic responses in production, never stack traces
 - This category surged from #5 to #2 in OWASP's 2025 dataset — misconfigurations in cloud/container/proxy/WAF/bucket setups are now the second most common real-world finding. Take it as seriously as access control.
